@@ -18,7 +18,7 @@
 
   const handleSignIn = async () => {
     await supabase.auth.signInWithPassword({
-      email:,
+      email,
       password,
     });
   };
