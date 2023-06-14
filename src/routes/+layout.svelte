@@ -1,30 +1,30 @@
-<script>
-  import { navigating } from "$app/stores";
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
+  import "../styles.css";
+  import { invalidate } from "$app/navigation";
+  import { onMount } from "svelte";
+  import type { PageData } from "./$types";
 
-  let previous;
-  let start;
-  let end;
+  export let data: PageData;
 
-  $: if ($navigating) {
-    start = Date.now();
-    end = null;
-    previous = $navigating;
-  } else {
-    end = Date.now();
-  }
+  let { supabase, session } = data;
+  $: ({ supabase, session } = data);
+
+  onMount(() => {
+    const { data } = supabase.auth.onAuthStateChange((event, _session) => {
+      if (_session?.expires_at !== session?.expires_at) {
+        invalidate("supabase:auth");
+      }
+    });
+
+    return () => data.subscription.unsubscribe();
+  });
 </script>
 
-<nav>
-  <a href="/">home</a>
-  <a href="/a">slow-a</a>
-  <a href="/b">slow-b</a>
-</nav>
+<svelte:head>
+  <title>User Management</title>
+</svelte:head>
 
-<slot />
-
-{#if previous && end}
-  <p>
-    navigated from {previous.from.url.pathname} to {previous.to.url.pathname} in
-    <strong>{end - start}ms</strong>
-  </p>
-{/if}
+<div class="container" style="padding: 50px 0 100px 0">
+  <slot />
+</div>
